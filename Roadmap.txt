@@ -1,0 +1,72 @@
+Project Roadmap: AlphaFeed Financial Intelligence Engine
+1. System Architecture Overview
+
+To achieve "pro" status, we will follow a decoupled architecture. Django will serve as the core application (handling authentication, database management, and UI), while background workers will handle the heavy lifting of AI processing.
+
+    Core Framework: Django 5.x (using the ASGI stack for modern async capabilities).
+
+    Database: PostgreSQL (The gold standard for Django and perfectly suited for Linux/Ubuntu environments).
+
+    Vector Engine: Pinecone or Milvus (integrated via Python clients to handle semantic search).
+
+    Task Queue: Redis + Celery (essential for offloading AI/API tasks outside the request-response cycle).
+
+    Frontend: Next.js (decoupled) or Django Templates + Tailwind/shadcn/ui (if you prefer a monolithic "batteries-included" approach).
+
+2. Implementation Roadmap
+Phase 1: Environment & Foundation
+
+    OS: Ubuntu 24.04 LTS.
+
+    Database: Install PostgreSQL via apt. Configure a dedicated user and database for the project.
+
+    Project Structure: Use the "Config-App-Infrastructure" pattern:
+
+        config/: Settings, WSGI/ASGI configuration.
+
+        apps/: Independent modules (e.g., market_data, sentiment_analysis, users).
+
+        services/: Business logic layer (separate from Views).
+
+        infrastructure/: Third-party API clients.
+
+Phase 2: Data Pipeline (The "Resilient" Layer)
+
+    Async Fetchers: Implement Celery tasks to poll news APIs (e.g., NewsAPI, Yahoo Finance, or custom web scrapers).
+
+    Storage Strategy:
+
+        Postgres: Store structured data (price, ticker, timestamp).
+
+        Vector DB: Store embeddings generated from news headlines for semantic querying.
+
+    Pro Tip: Use django-celery-beat for scheduled task orchestration.
+
+Phase 3: The Intelligence Layer (AI Integration)
+
+    Structured Output: Use the Instructor library to force your LLM to return Pydantic models. This prevents broken JSON responses from crashing your pipeline.
+
+    Contextual Processing: Do not send full articles to the LLM. Use a RAG approach to retrieve only the relevant "chunks" of data to minimize token costs and improve speed.
+
+Phase 4: Dashboard & Divergence Logic
+
+    Divergence Engine: Create a Django management command or service that calculates the delta between "Sentiment Trend" and "Price Trend" every 15 minutes.
+
+    Frontend: Use Recharts to visualize the relationship between sentiment volatility and price action.
+
+3. Professional Standards Checklist
+Task	Requirement
+Separation	Business logic must reside in services.py, not in views.py.
+Security	Secrets loaded via python-dotenv or environment variables. No hardcoded keys.
+Monitoring	Implement simple logging that tracks celery task execution times.
+Quality	Write PyTest files to verify that your sentiment classifier correctly handles "bullish" vs "bearish" language.
+Scalability	Ensure all DB queries are optimized using select_related and prefetch_related.
+4. Why this proves you are a "Pro"
+
+Most students build a CRUD app and call it a day. By choosing this architecture, you are demonstrating:
+
+    System Design: You understand how to scale by offloading work to background workers.
+
+    Maintainability: By using a structured apps/ directory, you show you can write code that teams can actually work on.
+
+    Modern AI Engineering: You aren't just using an API; you are building a pipeline that enforces structure, reliability, and cost-efficiency.

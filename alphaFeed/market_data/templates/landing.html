@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}AlphaFeed | Trading Intelligence Platform{% endblock %}
+
+{% block content %}
+<style>
+    .hero { min-height: calc(100vh - 72px); display: grid; align-items: center; padding: 42px 0 34px; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, .86fr); gap: 42px; align-items: center; }
+    h1 { margin: 14px 0 18px; font-size: clamp(42px, 7vw, 76px); line-height: .96; letter-spacing: 0; max-width: 780px; }
+    .lead { max-width: 650px; color: var(--muted); font-size: clamp(17px, 2vw, 20px); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    .hero-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 42px; max-width: 650px; }
+    .metric { border-left: 3px solid var(--accent); background: rgba(255,255,255,.58); padding: 12px 14px; border-radius: 7px; }
+    .metric strong { display: block; font-size: 24px; }
+    .metric span { color: var(--muted); font-size: 13px; font-weight: 700; }
+    .terminal { overflow: hidden; min-height: 510px; }
+    .terminal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+    .terminal-body { padding: 18px; }
+    .chart { height: 180px; display: flex; align-items: end; gap: 9px; padding: 18px 6px 4px; border-bottom: 1px solid var(--line); }
+    .bar { flex: 1; min-width: 12px; border-radius: 5px 5px 0 0; background: linear-gradient(180deg, #0d6b50, #8ac0a8); }
+    .bar:nth-child(3n) { background: linear-gradient(180deg, #d99a2b, #f0cf8b); }
+    .signal-list { display: grid; gap: 10px; margin-top: 18px; }
+    .signal { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfe; }
+    .signal b { display: block; }
+    .features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .feature { padding: 22px; }
+    .feature h3 { margin: 12px 0 8px; font-size: 18px; }
+    .feature p { margin: 0; color: var(--muted); }
+    .icon { width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; color: white; background: var(--brand); font-weight: 900; }
+    @media (max-width: 940px) { .hero { min-height: auto; } .hero-grid, .features { grid-template-columns: 1fr; } .terminal { min-height: auto; } }
+    @media (max-width: 560px) { .hero-metrics { grid-template-columns: 1fr; } .chart { gap: 5px; } }
+</style>
+
+<section class="hero">
+    <div class="shell hero-grid">
+        <div>
+            <div class="eyebrow">Trading intelligence platform</div>
+            <h1>AlphaFeed</h1>
+            <p class="lead">Monitor trading signals, review execution history, and keep a clean operational view of your automated market workflow from one focused SaaS dashboard.</p>
+            <div class="hero-actions">
+                <a class="button primary" href="/dashboard/">Open dashboard</a>
+                <a class="button" href="/market_data/tickers/">View assets</a>
+            </div>
+            <div class="hero-metrics">
+                <div class="metric"><strong>30s</strong><span>Dashboard refresh</span></div>
+                <div class="metric"><strong>XAU</strong><span>Gold signal ready</span></div>
+                <div class="metric"><strong>24/7</strong><span>Worker queue path</span></div>
+            </div>
+        </div>
+
+        <div class="card terminal" aria-label="AlphaFeed dashboard preview">
+            <div class="terminal-head"><strong>Signal Console</strong><span class="pill">Live-ready</span></div>
+            <div class="terminal-body">
+                <div class="chart" aria-hidden="true">
+                    <span class="bar" style="height: 44%"></span><span class="bar" style="height: 58%"></span><span class="bar" style="height: 39%"></span><span class="bar" style="height: 72%"></span><span class="bar" style="height: 62%"></span><span class="bar" style="height: 86%"></span><span class="bar" style="height: 70%"></span><span class="bar" style="height: 96%"></span><span class="bar" style="height: 80%"></span><span class="bar" style="height: 91%"></span>
+                </div>
+                <div class="signal-list">
+                    <div class="signal"><div><b>XAUUSD momentum</b><span class="muted">ATR confirmation and model signal aligned</span></div><span class="pill long">Long</span></div>
+                    <div class="signal"><div><b>Execution queue</b><span class="muted">Celery worker endpoint configured</span></div><span class="pill">Queued</span></div>
+                    <div class="signal"><div><b>Risk review</b><span class="muted">Recent trade feed available for audit</span></div><span class="pill">Review</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="shell features">
+        <article class="card feature"><div class="icon">S</div><h3>Signal monitoring</h3><p>Track generated long and short signals with asset, price, and timestamp context.</p></article>
+        <article class="card feature"><div class="icon">A</div><h3>Asset coverage</h3><p>Manage watched tickers and price history through the Django admin and asset views.</p></article>
+        <article class="card feature"><div class="icon">Q</div><h3>Queue operations</h3><p>Trigger bot iterations through a safer endpoint that reports queue availability clearly.</p></article>
+    </div>
+</section>
+{% endblock %}

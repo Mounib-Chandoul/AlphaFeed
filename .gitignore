@@ -1,0 +1,12 @@
+.env
+*.sqlite3
+__pycache__/
+*.py[cod]
+.venv/
+staticfiles/
+celerybeat-schedule
+*.log
+.DS_Store
+.claude/
+.agents/
+.codex/

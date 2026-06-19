@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | AlphaFeed{% endblock %}
+
+{% block content %}
+<meta http-equiv="refresh" content="30">
+<style>
+    .dashboard-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-end; padding-top: 34px; }
+    h1 { margin: 8px 0 0; font-size: clamp(32px, 5vw, 48px); line-height: 1; }
+    .status-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 24px; }
+    .stat { padding: 20px; }
+    .stat span { color: var(--muted); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+    .stat strong { display: block; margin-top: 8px; font-size: 30px; line-height: 1; }
+    .workbench { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, .7fr); gap: 16px; margin-top: 16px; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .panel-head h2 { margin: 0; font-size: 18px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    th, td { padding: 14px 20px; text-align: left; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .07em; background: #f9fbfd; }
+    td { font-size: 14px; }
+    .price, .money { font-weight: 850; font-variant-numeric: tabular-nums; }
+    .money.pos { color: var(--good); }
+    .money.neg { color: var(--danger); }
+    .empty { padding: 34px 20px; color: var(--muted); text-align: center; }
+    .side-panel { padding: 20px; display: grid; gap: 18px; align-content: start; }
+    .latest { padding: 16px; border-radius: 8px; background: var(--panel-soft); }
+    .latest strong { display: block; font-size: 26px; margin: 3px 0; }
+    .mix { display: grid; gap: 12px; }
+    .mix-row { display: grid; grid-template-columns: 76px 1fr auto; gap: 10px; align-items: center; }
+    .track { height: 10px; background: var(--panel-soft); border-radius: 999px; overflow: hidden; }
+    .fill { height: 100%; background: var(--brand); border-radius: inherit; }
+    .fill.short { background: var(--accent); }
+    .runs { display: grid; gap: 10px; }
+    .run { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: #fbfcfe; }
+    .run-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .run-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; color: var(--muted); font-size: 13px; }
+    .run-metrics b { display: block; color: var(--text); font-size: 15px; }
+    .pill.SUCCEEDED { color: var(--good); background: #e8f6ee; }
+    .pill.FAILED { color: var(--danger); background: #fff0e8; }
+    .pill.RUNNING, .pill.QUEUED { color: #9a6700; background: #fff6d8; }
+    @media (max-width: 980px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .workbench { grid-template-columns: 1fr; } }
+    @media (max-width: 680px) { .dashboard-head { align-items: flex-start; flex-direction: column; } .status-row { justify-content: flex-start; } .stats { grid-template-columns: 1fr; } .run-metrics { grid-template-columns: 1fr; } }
+</style>
+
+<section class="shell section">
+    <div class="dashboard-head">
+        <div>
+            <div class="eyebrow">Operations dashboard</div>
+            <h1>Trading Bot Activity</h1>
+            <p class="muted">Queue ML backtests, review generated trade events, and monitor worker outcomes.</p>
+        </div>
+        <div class="status-row"><span class="pill">Auto refresh</span><a class="button primary" href="/market_data/analyze/">Run backtest</a></div>
+    </div>
+
+    {% if database_unavailable %}
+    <div class="card empty" style="margin-top: 24px; text-align: left;">Database connection is unavailable. The interface is running, but live bot data cannot be loaded.</div>
+    {% endif %}
+
+    <div class="stats">
+        <div class="card stat"><span>Total trades</span><strong>{{ total_trades }}</strong></div>
+        <div class="card stat"><span>Tracked assets</span><strong>{{ tracked_assets }}</strong></div>
+        <div class="card stat"><span>Long signals</span><strong>{{ long_count }}</strong></div>
+        <div class="card stat"><span>Short signals</span><strong>{{ short_count }}</strong></div>
+    </div>
+
+    <div class="workbench">
+        <section class="card">
+            <div class="panel-head"><h2>Recent trade events</h2><span class="pill">Last 12</span></div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Timestamp</th><th>Symbol</th><th>Signal</th><th>Price</th><th>PnL</th><th>Source</th></tr></thead>
+                    <tbody>
+                        {% for trade in trades %}
+                        <tr>
+                            <td>{{ trade.timestamp|date:"M d, Y H:i" }}</td>
+                            <td><strong>{{ trade.ticker.symbol }}</strong></td>
+                            <td><span class="pill {% if trade.side == 'LONG' %}long{% elif trade.side == 'SHORT' %}short{% endif %}">{{ trade.side }}</span></td>
+                            <td class="price">${{ trade.price }}</td>
+                            <td>{% if trade.pnl is not None %}<span class="money {% if trade.pnl >= 0 %}pos{% else %}neg{% endif %}">${{ trade.pnl }}</span>{% else %}<span class="muted">-</span>{% endif %}</td>
+                            <td>{{ trade.source }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td class="empty" colspan="6">No trade events have been recorded yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <aside class="card side-panel">
+            <div>
+                <div class="eyebrow">Latest run</div>
+                <div class="latest">
+                    {% if latest_run %}
+                    <span class="pill {{ latest_run.status }}">{{ latest_run.status }}</span>
+                    <strong>{{ latest_run.ticker_symbol }}</strong>
+                    <span class="muted">{{ latest_run.get_run_type_display }} created {{ latest_run.created_at|date:"M d, H:i" }}</span>
+                    {% if latest_run.error_message %}<p class="muted">{{ latest_run.error_message|truncatechars:120 }}</p>{% endif %}
+                    {% else %}
+                    <strong>Waiting</strong>
+                    <span class="muted">Start Redis and a Celery worker, then run a backtest.</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <div class="eyebrow">Recent runs</div>
+                <div class="runs">
+                    {% for run in runs %}
+                    <div class="run">
+                        <div class="run-top"><strong>#{{ run.id }} {{ run.ticker_symbol }}</strong><span class="pill {{ run.status }}">{{ run.status }}</span></div>
+                        <div class="run-metrics">
+                            <span><b>{{ run.total_trades }}</b>Trades</span>
+                            <span><b>{% if run.win_rate is not None %}{{ run.win_rate }}%{% else %}-{% endif %}</b>Win rate</span>
+                            <span><b>{% if run.total_pnl is not None %}${{ run.total_pnl }}{% else %}-{% endif %}</b>Total PnL</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty">No bot runs yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div>
+                <div class="eyebrow">Signal mix</div>
+                <div class="mix">
+                    <div class="mix-row"><strong>Long</strong><span class="track"><span class="fill" style="width: {% widthratio long_count total_trades 100 %}%"></span></span><span class="muted">{{ long_count }}</span></div>
+                    <div class="mix-row"><strong>Short</strong><span class="track"><span class="fill short" style="width: {% widthratio short_count total_trades 100 %}%"></span></span><span class="muted">{{ short_count }}</span></div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</section>
+{% endblock %}

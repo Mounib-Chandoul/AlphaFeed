@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Assets | AlphaFeed{% endblock %}
+
+{% block content %}
+<style>
+    .assets-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; }
+    h1 { margin: 8px 0 0; font-size: clamp(32px, 5vw, 48px); line-height: 1; }
+    .asset-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 24px; }
+    .asset { padding: 20px; }
+    .asset strong { display: block; font-size: 24px; }
+    .asset span { color: var(--muted); }
+    .empty { padding: 26px; text-align: center; color: var(--muted); margin-top: 24px; }
+    @media (max-width: 680px) { .assets-head { align-items: flex-start; flex-direction: column; } }
+</style>
+
+<section class="shell section">
+    <div class="assets-head">
+        <div>
+            <div class="eyebrow">Market coverage</div>
+            <h1>Tracked assets</h1>
+            <p class="muted">Symbols available to the trading bot and price history services.</p>
+        </div>
+        <a class="button primary" href="/admin/market_data/ticker/add/">Add asset</a>
+    </div>
+
+    {% if database_unavailable %}
+    <div class="card empty">Database connection is unavailable. Asset records cannot be loaded right now.</div>
+    {% elif tickers %}
+    <div class="asset-grid">
+        {% for ticker in tickers %}
+        <article class="card asset"><span class="pill">{{ ticker.symbol }}</span><strong>{{ ticker.name }}</strong><span>Ready for market data and trade history.</span></article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card empty">No assets have been added yet.</div>
+    {% endif %}
+</section>
+{% endblock %}

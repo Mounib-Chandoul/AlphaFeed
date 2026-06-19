@@ -1,0 +1,3 @@
+mounib2005CHANDOUL : db_password
+mounib : superuser
+mounib2005CH : superuser password (mounib)

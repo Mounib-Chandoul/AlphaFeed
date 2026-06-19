@@ -1,64 +1,71 @@
 # AlphaFeed
 
-AlphaFeed is a Django SaaS dashboard for running and monitoring a gold trading research bot. The production path is Django + Celery + Redis + PostgreSQL. The bot integration currently runs signal scans and ML backtests; it does not place live broker orders.
+AlphaFeed is a robust Django-based SaaS platform designed for gold trading research, signal scanning, and ML-driven backtesting. The architecture leverages a distributed task queue system to handle asynchronous research tasks independently of the web interface.
+![AlphaFeed Architecture](.png)
+## Tech Stack
+* **Web Framework:** Django
+* **Task Queue:** Celery
+* **Message Broker:** Redis
+* **Database:** PostgreSQL (Production) / SQLite (Local)
 
-## Local setup
+---
 
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt
-cp alphaFeed/.env.example alphaFeed/.env
-# For local sqlite, remove DB_ENGINE and the DB_* variables from alphaFeed/.env.
-python alphaFeed/manage.py migrate
-python alphaFeed/manage.py createsuperuser
-```
+## Local Development Setup
 
-Run the web app:
+1.  **Environment Setup:**
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+    ```
 
-```bash
-python alphaFeed/manage.py runserver 127.0.0.1:8000
-```
+2.  **Configuration:**
+    Copy the example environment file and configure your local settings:
+    ```bash
+    cp alphaFeed/.env.example alphaFeed/.env
+    ```
 
-Run Redis and Celery in separate shells:
+3.  **Database Initialization:**
+    ```bash
+    python alphaFeed/manage.py migrate
+    python alphaFeed/manage.py createsuperuser
+    ```
 
-```bash
-redis-server
-celery -A alphaFeed worker -l info --workdir alphaFeed
-celery -A alphaFeed beat -l info --workdir alphaFeed
-```
+4.  **Running the Services:**
+    You will need three separate terminal sessions:
+    * **Web Server:** `python alphaFeed/manage.py runserver 127.0.0.1:8000`
+    * **Worker:** `python -m celery -A alphaFeed worker --loglevel=info`
+    * **Scheduler:** `python -m celery -A alphaFeed beat --loglevel=info`
 
-Open `http://127.0.0.1:8000/`, then use **Run backtest** on the dashboard.
+---
 
-## Production checklist
+## Production Checklist
 
-- Set `DJANGO_DEBUG=False`.
-- Set a unique `DJANGO_SECRET_KEY`.
-- Set `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` for the deployed domain.
-- Use PostgreSQL and Redis managed services or locked-down private containers.
-- Run `python alphaFeed/manage.py migrate` during release.
-- Run `python alphaFeed/manage.py collectstatic --noinput` during release.
-- Serve Django with Gunicorn/Uvicorn behind an HTTPS reverse proxy.
-- Run at least one Celery worker and one Celery beat process.
-- Keep `alphaFeed/.env` out of git. Use `alphaFeed/.env.example` as the template.
-- Add a real broker adapter before enabling live order placement. The current task records research signals and backtest events only.
+Before deploying to a live environment, ensure the following steps are completed:
 
-## Process commands
+* **Security:** Set `DJANGO_DEBUG=False` and rotate your `DJANGO_SECRET_KEY`.
+* **Host Configuration:** Configure `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` to match your domain.
+* **Database & Broker:** Transition from SQLite to a managed PostgreSQL instance and a secured Redis instance.
+* **Static Assets:** Run `python alphaFeed/manage.py collectstatic --noinput` during your deployment pipeline.
+* **Reverse Proxy:** Serve the application using Gunicorn behind an Nginx HTTPS reverse proxy.
+* **Environment Variables:** Ensure `alphaFeed/.env` is excluded from version control. Use `.env.example` as a template for environment configuration.
+* **Broker Safety:** The current implementation is strictly for research and backtesting. **Do not enable live order placement** until a hardened broker adapter has been integrated and audited.
 
-Web:
+---
 
-```bash
-gunicorn alphaFeed.wsgi:application --chdir alphaFeed --bind 0.0.0.0:8000
-```
+## Process Commands (Deployment)
 
-Worker:
+For production environments, run the services using the following patterns:
 
-```bash
-celery -A alphaFeed worker -l info --workdir alphaFeed
-```
+| Process | Command |
+| :--- | :--- |
+| **Web** | `gunicorn alphaFeed.wsgi:application --chdir alphaFeed --bind 0.0.0.0:8000` |
+| **Worker** | `celery -A alphaFeed worker -l info --workdir alphaFeed` |
+| **Scheduler**| `celery -A alphaFeed beat -l info --workdir alphaFeed` |
 
-Scheduler:
+---
 
-```bash
-celery -A alphaFeed beat -l info --workdir alphaFeed
-```
+## Architecture Overview
+
+
+This system uses a decoupled architecture to ensure that heavy signal processing and backtesting computations do not interfere with dashboard responsiveness. The **Beat** process acts as the system clock, the **Redis Broker** manages the queue, and the **Celery Workers** provide the parallel processing power required for high-frequency market research.

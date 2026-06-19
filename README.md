@@ -1,7 +1,7 @@
 # AlphaFeed
 
 AlphaFeed is a robust Django-based SaaS platform designed for gold trading research, signal scanning, and ML-driven backtesting. The architecture leverages a distributed task queue system to handle asynchronous research tasks independently of the web interface.
-![AlphaFeed Architecture](.png)
+![AlphaFeed Architecture](Dashboard.png)
 ## Tech Stack
 * **Web Framework:** Django
 * **Task Queue:** Celery
